@@ -46,7 +46,7 @@ public class MyAdapter extends BaseAdapter {
 	// 告诉列表有多少个item
 	@Override
 	public int getCount() {
-		return mDatas.size();// 30
+		return mDatas!=null ? mDatas.size() : 0;// 30
 	}
 	
 	//ViewHolder通常出现在适配器里，为的是listview滚动的时候快速设置值
