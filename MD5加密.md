@@ -19,16 +19,24 @@ grammar_cjkRuby: true
 
     3、防止抵赖（数字签名）：
     这需要一个第三方认证机构。例如A写了一个文件，认证机构对此文件用MD5算法产生摘要信息并做好记录。若以后A说这文件不是他写的，权威机构只需对此文件重新产生摘要信息，然后跟记录在册的摘要信息进行比对，相同的话，就证明是A写的了。这就是所谓的“数字签名”。
-
 参考:http://blog.csdn.net/forgotaboutgirl/article/details/7258109
 
+MD5加密是最常用的加密方式,不可逆转.
+网上有破解加密的网站,大多数是用穷举法实现破解.
+
+
 ``` MD5
-public void testDigest(){
+     public void testDigest(){
         try {
+            //设置加密方式
             MessageDigest digest = MessageDigest.getInstance("md5");
+            //需要加密的密码
             String password= "123456";
+            //加密后返回一个byte数组
             byte[] bytes = digest.digest(password.getBytes());
+            //new一个StringBuffer储存字符串
             StringBuffer sb = new StringBuffer();
+            //把byte转化为int类型,再组成字符串
             for (byte b : bytes) {
                 String hex = Integer.toHexString(b & 0xff);
                 if(hex.length()==1) {
@@ -36,10 +44,12 @@ public void testDigest(){
                 }
                 sb.append(hex);
             }
+            //打印测试是否成功
             Log.v("cherish233",sb.toString());
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-    }
+	}
 ```
+
