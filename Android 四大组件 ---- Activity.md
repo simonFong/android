@@ -90,7 +90,8 @@ android:label 指定的是活动中标题栏的内容,还会成为启动器(Laun
 ```
 这个标签里的两个标签作用是把这个Activity当成是程序打开后启动的第一个页面,如果有多个Activity编辑了这两个标签,会弹出一个对话框让你选择启动哪一个Activity
 
-好,配置完毕,可以用模拟器启动了
+好,配置完毕,可以用模拟器启动了 
+
 ![enter description here][1]
 ![enter description here][2]
 
@@ -156,6 +157,7 @@ Toast.makeText(MainActivity.this, "这是一个吐司", Toast.LENGTH_SHORT).show
     }
 ```
 效果:
+
 ![enter description here][3]
 
 
