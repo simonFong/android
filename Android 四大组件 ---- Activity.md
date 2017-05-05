@@ -162,5 +162,5 @@ Toast.makeText(MainActivity.this, "这是一个吐司", Toast.LENGTH_SHORT).show
 
 
   [1]: ./images/Activity_2.png "Activity"
-  [2]: ./images/Activity2.png "Activity2"
+  [2]: ./images/Activity2_1.png "Activity2"
   [3]: ./images/Activity3.png "Activity3"
