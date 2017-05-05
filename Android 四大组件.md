@@ -1,13 +1,13 @@
 ---
-title: Android 四大组件 
-tags: Activity,service,content provider,broadcast receiver
+title: Android 四大组件 ---- Activity
+tags: Activity
 grammar_cjkRuby: true
 ---
 
 
 注意:所有的四大组件都必须在AndroidManifest.xml文件中配置
 
-一 .Activity
+
 1.创建一个Class文件并继承Activity
 
 ``` stylus
@@ -94,12 +94,71 @@ android:label 指定的是活动中标题栏的内容,还会成为启动器(Laun
 ![enter description here][1]
 ![enter description here][2]
 
-二. Service
+Activity拓展:
+1.隐藏标题栏
+如果是继承AppCompatActivity,添加的是supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
+``` stylus
+ protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        **requestWindowFeature(Window.FEATURE_NO_TITLE);**
+        setContentView(R.layout.activity_main);
+    }
+```
 
-三. Content Provider
+2.使用吐司(Toast)
+Toast.makeText(MainActivity.this, "这是一个吐司", Toast.LENGTH_SHORT).show();
 
-四. Broadcast Receiver
+3.使用Menu
+①在res新建一个menu文件夹
+②在menu文件夹创建一个Android Xml File
+③编辑布局添加item
+
+``` stylus
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/add_item"
+        android:title="Add"/>
+    <item
+        android:id="@+id/remove_item"
+        android:title="Remove"/>
+
+</menu>
+```
+④回到Activity,重写onCreateOptionsMenu方法
+
+``` stylus
+ @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main,menu);
+        return true;
+    }
+```
+⑤菜单响应事件
+重写onOptionsItemSelected
+
+``` stylus
+ @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.add_item:
+                Toast.makeText(MainActivity.this, "添加", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.remove_item:
+                Toast.makeText(MainActivity.this, "删除", Toast.LENGTH_SHORT).show();
+                break;
+            default:
+
+        }
+        return true;
+    }
+```
+效果:
+![enter description here][3]
 
 
   [1]: ./images/Activity_1.png "Activity"
   [2]: ./images/Activity2.png "Activity2"
+  [3]: ./images/Activity3.png "Activity3"
