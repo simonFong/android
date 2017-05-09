@@ -1,6 +1,6 @@
 ---
 title:  自定义Toast并移动
-tags: 新建,模板,小书匠
+tags: 自定义吐司,控件的移动
 grammar_cjkRuby: true
 ---
 
@@ -24,7 +24,7 @@ public class WindowsViewService extends Service {
     public void onCreate() {
         //获取窗口管理器
         mWn = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-        //LayoutParams相当于一个Layout的信息包，它封装的是Layout的位置、高、宽等信息。
+        //LayoutParams相当于一个Layout的信息包，它封装的是Layout的位置、高、宽等信息,这里就是给窗口设置属性.
         mParams = new WindowManager.LayoutParams();
         mParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
         mParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
