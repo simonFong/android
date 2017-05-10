@@ -16,4 +16,5 @@ grammar_cjkRuby: true
 |   SENSORS  |  BODY_SENSORS   |
 |  SMS   |  SEND_SMS , RECEIVE_SMS , READ_SMS , RECEIVE_WAP_PUSH , RECEIVE_MMS   |
 |  STORAGE   |  READ_EXTERNAL_STORAGE , WRITE_EXTERNAL_STORAGE   |
-|     |     |
+
+https://developer.android.com/reference/android/Manifest.permission.html
