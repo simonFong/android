@@ -1,11 +1,11 @@
 ---
-title: MD5加密 
-tags: 密码加密方法
+title: 加密 
+tags: 密码加密方法:MD5,AES
 grammar_cjkRuby: true
 ---
 
 
-    MD5功能：
+一.    MD5功能：
     输入任意长度的信息，经过处理，输出为128位的信息（数字指纹）；
     不同的输入得到的不同的结果（唯一性）；
     根据128位的输出结果不可能反推出输入的信息（不可逆）； 
@@ -52,4 +52,119 @@ MD5加密是最常用的加密方式,不可逆转.
         }
 	}
 ```
+
+
+二. AES
+1.可逆的加密方式
+2.先添加jar包
+
+``` stylus
+public class AESUtils {
+
+	public static final String KEY = "1234567891234567";
+
+	public static String encrypt(String src) throws Exception {
+		byte[] rawKey = getRawKey(KEY.getBytes());
+		byte[] result = encrypt(rawKey, src.getBytes());
+		return toHex(result);
+	}
+
+	public static String decrypt(String encrypted) throws Exception {
+		byte[] rawKey = getRawKey(KEY.getBytes());
+		byte[] enc = toByte(encrypted);
+		byte[] result = decrypt(rawKey, enc);
+		return new String(result);
+	}
+
+	private static byte[] getRawKey(byte[] seed) throws Exception {
+		KeyGenerator kgen = KeyGenerator.getInstance("AES");
+		SecureRandom sr = null;
+		if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.JELLY_BEAN) {
+			sr = SecureRandom.getInstance("SHA1PRNG", "Crypto");
+		} else {
+			sr = SecureRandom.getInstance("SHA1PRNG");
+		}
+		sr.setSeed(seed);
+		kgen.init(256, sr); // 256 bits or 128 bits,192bits
+		SecretKey skey = kgen.generateKey();
+		byte[] raw = skey.getEncoded();
+		return raw;
+	}
+
+	private static byte[] encrypt(byte[] key, byte[] src) throws Exception {
+		SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
+		Cipher cipher = Cipher.getInstance("AES");
+		cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
+		byte[] encrypted = cipher.doFinal(src);
+		return encrypted;
+	}
+
+	private static byte[] decrypt(byte[] key, byte[] encrypted)
+			throws Exception {
+		SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
+		Cipher cipher = Cipher.getInstance("AES");
+		cipher.init(Cipher.DECRYPT_MODE, skeySpec);
+		byte[] decrypted = cipher.doFinal(encrypted);
+		return decrypted;
+	}
+
+	public static String toHex(String txt) {
+		return toHex(txt.getBytes());
+	}
+
+	public static String fromHex(String hex) {
+		return new String(toByte(hex));
+	}
+
+	public static byte[] toByte(String hexString) {
+		int len = hexString.length() / 2;
+		byte[] result = new byte[len];
+		for (int i = 0; i < len; i++)
+			result[i] = Integer.valueOf(hexString.substring(2 * i, 2 * i + 2),
+					16).byteValue();
+		return result;
+	}
+
+	public static String toHex(byte[] buf) {
+		if (buf == null)
+			return "";
+		StringBuffer result = new StringBuffer(2 * buf.length);
+		for (int i = 0; i < buf.length; i++) {
+			appendHex(result, buf[i]);
+		}
+		return result.toString();
+	}
+
+	private final static String HEX = "0123456789ABCDEF";
+
+	private static void appendHex(StringBuffer sb, byte b) {
+		sb.append(HEX.charAt((b >> 4) & 0x0f)).append(HEX.charAt(b & 0x0f));
+	}
+}
+```
+
+
+3.加密实例
+
+``` stylus
+ protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        TextView encryptTv = (TextView) findViewById(R.id.encrypt);
+        TextView decryptTv = (TextView) findViewById(R.id.decrypt);
+        try {
+            int  pwd = 123456;
+            String encrypt = AESUtils.encrypt(String.valueOf(pwd));
+//            Toast.makeText(MainActivity.this, encrypt, Toast.LENGTH_SHORT).show();
+            encryptTv.setText(encrypt);
+
+            String decrypt = AESUtils.decrypt(encrypt);
+            decryptTv.setText(decrypt);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+```
+
 
