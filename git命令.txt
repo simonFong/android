@@ -1,0 +1,25 @@
+git init  项目初始化
+
+git add .   把所有文件提交到本地仓库
+
+git commit -m "提交说明"
+
+//第一次提交
+git remote add origin 服务器项目地址
+
+git push origin master 提交远程主分支
+
+git status 查看自己提交什么
+
+git branch -a 查看远程跟本地分支
+
+git branch 分支名称		创建分支
+
+
+合并到主分支操作
+
+git checkout master
+
+git merge 分支名 
+
+git push origin master
