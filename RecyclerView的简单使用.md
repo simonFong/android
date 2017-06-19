@@ -301,12 +301,14 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
     }
 
     //删除数据
-    public void deleteItem(){
-        if(mData == null || mData.isEmpty()) {
+    public void deleteItem(int position) {
+        if (mData == null || mData.isEmpty()) {
             return;
         }
-        mData.remove(0);
-        notifyItemRemoved(0);
+        mData.remove(position);
+        notifyItemRemoved(position);
+        //删除数据后要进行刷新,否则下次删除的时候position会对应错误
+       notifyDataSetChanged();
     }
 ```
 然后在你需要的地方进行调用,我是在MainActivity中添加了两个按钮进行简单的添加和删除操作
@@ -363,20 +365,22 @@ RecyclerView并没有像ListView一样提供点击事件,需要自己自定义�
 然后对ViewHolder设置监听
 
 ``` stylus
-@Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+ @Override
+    public void onBindViewHolder(ViewHolder holder, final int position) {
+        Log.v("cherish233","onBindViewHolder:"+position);
         holder.mTx.setText(mData.get(position));
+
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mOnItemClickListener.onClick();
+                mOnItemClickListener.onClick(position);
             }
         });
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                mOnItemClickListener.onLongClick();
+                mOnItemClickListener.onLongClick(position);
                 return true;
             }
         });
