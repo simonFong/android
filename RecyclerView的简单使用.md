@@ -109,7 +109,7 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecycleAdapter.ViewHold
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder{
- //要手动添加属性,不然布局会显示不正常
+ //有写情况下需要手动设置属性,不然布局会显示不正常
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         itemView.setLayoutParams(layoutParams);
         private final TextView mTx;
