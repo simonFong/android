@@ -4,6 +4,13 @@ tags: Manager,Adapter,Decoration
 grammar_cjkRuby: true
 ---
 
+* [前言](#前言)
+* [1.控件使用](#1控件使用)
+* [2.Adapter和LayoutManager](#2adapter和layoutmanager)
+	* [①LayoutManager布局管理器](#1layoutmanager布局管理器)
+	* [②Adapter适配器](#2adapter适配器)
+	* [③Decoration修饰器](#3decoration修饰器)
+
 # 前言
 今天研究了一下RecyclerView,发现这真的非常强大,不仅可以完全取缔ListView和GridView,还可以有很多其他的效果,可以非常炫酷,今天先来记录下最简单的使用.
 
@@ -277,4 +284,127 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
 ![enter description here][1]
 
 
+# 3.添加和删除
+要想添加和删除数据,只需要在Adapter中添加两个方法
+
+``` stylus
+//添加数据
+    public void addNewItem(){
+        if(mData == null) {
+            mData = new ArrayList<>();
+        }
+        mData.add(0, "new Item");
+        //用notifyItemInserted(0)来刷新需要更新的Item,如果用notifyDataSetChanged()没有动画效果
+        notifyItemInserted(0);
+    }
+
+    //删除数据
+    public void deleteItem(){
+        if(mData == null || mData.isEmpty()) {
+            return;
+        }
+        mData.remove(0);
+        notifyItemRemoved(0);
+    }
+```
+然后在你需要的地方进行调用,我是在MainActivity中添加了两个按钮进行简单的添加和删除操作
+
+``` stylus
+ @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.add_btn:
+                mRecycleAdapter.addNewItem();
+                //回到第一个Item
+                mLinearLayoutManager.scrollToPosition(0);
+                break;
+            case R.id.delete_btn:
+                mRecycleAdapter.deleteItem();
+                mLinearLayoutManager.scrollToPosition(0);
+                break;
+        }
+    }
+```
+
+效果如下:   
+![enter description here][2]
+
+RecyclerView可以设置列表中Item删除和添加的动画,V7包中提供了一个默认动画,只需设置一下就可以了.
+
+``` stylus
+// 设置Item添加和移除的动画
+mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+```
+
+效果:   
+![enter description here][3]
+
+
+# 4.点击事件
+RecyclerView并没有像ListView一样提供点击事件,需要自己自定义点击事件和长按事件.
+通过在绑定ViewHolder的时候设置监听，然后通过Apater回调出去
+
+在Adapter里创建一个监听器,并提供一个方法:  
+
+``` stylus
+	interface OnItemClickListener {
+        void onClick();
+        void onLongClick();
+    }
+	
+	//设置为全局变量
+	private OnItemClickListener mOnItemClickListener;
+    public void setItemClickListener(OnItemClickListener listener) {
+        mOnItemClickListener = listener;
+    }
+```
+然后对ViewHolder设置监听
+
+``` stylus
+@Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        holder.mTx.setText(mData.get(position));
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mOnItemClickListener.onClick();
+            }
+        });
+
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                mOnItemClickListener.onLongClick();
+                return true;
+            }
+        });
+    }
+```
+设置完监听后,就回到Activity,对Adapter设置监听,并实现方法
+
+``` stylus
+//设置点击事件
+    private void setClickEvent() {
+        mRecycleAdapter.setItemClickListener(new RecycleAdapter.OnItemClickListener() {
+            @Override
+            public void onClick() {
+                Toast.makeText(getApplicationContext(),"我点击了一下",Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onLongClick() {
+                Toast.makeText(getApplicationContext(),"我长按了item",Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+```
+
+
+
+
+
+
+
   [1]: ./images/GIF5.gif "GIF5"
+  [2]: ./images/GIF1.gif "GIF1"
+  [3]: ./images/GIF2.gif "GIF2"
