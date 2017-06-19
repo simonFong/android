@@ -88,6 +88,8 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecycleAdapter.ViewHold
     //获取item布局,并创建ViewHolder与之绑定
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+	    //这里填充的布局root写parent的话,会只显示一个item,改为null后才正常显示
+        //解决http://blog.csdn.net/fantasiasango/article/details/52188064
         //如果用View.inflate填充的布局没有调用到设置的属性
 //        View view = View.inflate(parent.getContext(), R.layout.view_rv_item, null);
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.view_rv_item, parent, false);
@@ -107,7 +109,9 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecycleAdapter.ViewHold
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder{
-
+ //要手动添加属性,不然布局会显示不正常
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        itemView.setLayoutParams(layoutParams);
         private final TextView mTx;
 
         public ViewHolder(View itemView) {
