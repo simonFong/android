@@ -10,6 +10,8 @@ grammar_cjkRuby: true
 	* [①LayoutManager布局管理器](#1layoutmanager布局管理器)
 	* [②Adapter适配器](#2adapter适配器)
 	* [③Decoration修饰器](#3decoration修饰器)
+* [3.添加和删除](#3添加和删除)
+* [4.点击事件](#4点击事件)
 
 # 前言
 今天研究了一下RecyclerView,发现这真的非常强大,不仅可以完全取缔ListView和GridView,还可以有很多其他的效果,可以非常炫酷,今天先来记录下最简单的使用.
