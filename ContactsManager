@@ -1,0 +1,475 @@
+package com.example.dianhua.utils;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+
+import android.Manifest;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.provider.CallLog;
+import android.provider.CallLog.Calls;
+import android.provider.ContactsContract;
+import android.provider.ContactsContract.PhoneLookup;
+import android.support.v4.app.ActivityCompat;
+import android.util.Log;
+
+import com.alibaba.fastjson.support.hsf.HSFJSONUtils;
+import com.example.dianhua.bean.CallsLogsBean;
+import com.example.dianhua.bean.Contact;
+
+/**
+ * 
+ * @author Administrator
+ * @category 获取手机通讯录数据工具,获取通话记录
+ * 
+ */
+public class ContactsManager {
+
+	/**
+	 * 
+	 * @param 获取所有的联系人
+	 *            ，包括姓名，id，电话号码
+	 * @return
+	 */
+	public static ArrayList<Contact> getContacts(Context context) {
+		ArrayList<Contact> contactNames = new ArrayList<Contact>();
+
+		ContentResolver resolver = context.getApplicationContext()
+				.getContentResolver();
+
+		Cursor cursor = resolver.query(ContactsContract.Contacts.CONTENT_URI,
+				null, null, null, null);
+
+		while (cursor.moveToNext()) {
+
+			// 取得联系人的名字索引
+			int nameIndex = cursor.getColumnIndex(PhoneLookup.DISPLAY_NAME);
+			String contactName = cursor.getString(nameIndex);
+			// 取得联系人的ID索引值
+			String contactId = cursor.getString(cursor
+					.getColumnIndex(ContactsContract.Contacts._ID));
+			ArrayList<String> contactPhoneNum = getContactPhoneNum(context,
+					contactId);
+
+			if (contactName != null) {
+				Contact contact = new Contact();
+				contact.setContactName(contactName);
+				contact.setContactId(contactId);
+				contact.setContactPhoneNum(contactPhoneNum);
+				contactNames.add(contact);
+			}
+
+		}
+		cursor.close();
+		return contactNames;
+	}
+
+	/**
+	 * 
+	 * @param context
+	 * @return 获取通讯录所有姓名和ID索引值，不重复数据
+	 */
+	public static ArrayList<Contact> getContactName(Context context) {
+		ArrayList<Contact> contactNames = new ArrayList<Contact>();
+
+		ContentResolver resolver = context.getApplicationContext()
+				.getContentResolver();
+
+		Cursor cursor = resolver.query(ContactsContract.Contacts.CONTENT_URI,
+				null, null, null, null);
+
+		while (cursor.moveToNext()) {
+
+			// 取得联系人的名字索引
+			int nameIndex = cursor.getColumnIndex(PhoneLookup.DISPLAY_NAME);
+			String contactName = cursor.getString(nameIndex);
+			// 取得联系人的ID索引值
+			String contactId = cursor.getString(cursor
+					.getColumnIndex(ContactsContract.Contacts._ID));
+
+			if (contactName != null) {
+				Contact contact = new Contact();
+				contact.setContactName(contactName);
+				contact.setContactId(contactId);
+				contactNames.add(contact);
+			}
+
+		}
+		cursor.close();
+		return contactNames;
+	}
+
+	/**
+	 * 
+	 * @param context
+	 * @param contactId
+	 *            ID索引值
+	 * @return 获取对应的ID索引值（姓名），所对应的手机号码
+	 */
+	public static ArrayList<String> getContactPhoneNum(Context context,
+			String contactId) {
+		ArrayList<String> phoneNums = new ArrayList<String>();
+
+		ContentResolver resolver = context.getApplicationContext()
+				.getContentResolver();
+
+		Cursor cursor = resolver.query(ContactsContract.Contacts.CONTENT_URI,
+				null, null, null, null);
+
+		while (cursor.moveToNext()) {
+
+			// 查询该位联系人的电话号码，类似的可以查询email，photo
+			Cursor phone = resolver.query(
+					ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+					ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = "
+							+ contactId, null, null);// 第一个参数是确定查询电话号，第三个参数是查询具体某个人的过滤值
+
+			// 一个人可能有几个号码
+			while (phone.moveToNext()) {
+				String strPhoneNumber = phone
+						.getString(phone
+								.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+				if (phoneNums != null) {
+					phoneNums.add(strPhoneNumber);
+				}
+
+			}
+			phone.close();
+
+		}
+		// 去除重复元素
+		for (int i = 0; i < phoneNums.size(); i++) // 外循环是循环的次数
+		{
+			for (int j = phoneNums.size() - 1; j > i; j--) // 内循环是
+															// 外循环一次比较的次数
+			{
+				if (phoneNums.get(i).equals(phoneNums.get(j))) {
+					phoneNums.remove(j);
+				}
+			}
+		}
+
+		cursor.close();
+		return phoneNums;
+	}
+
+	/**
+	 * 
+	 * @param context
+	 * @param phoneNum
+	 * @return 获取某个号码的通话记录
+	 */
+	public static ArrayList<CallsLogsBean> getCallsLogsFromNum(Context context,
+			String phoneNum) {
+		// resolver.query(CallLog.Calls.CONTENT_URI, null, "number=?",
+		// new String[] { "15101689022" }, null);
+		// String result = null;
+		ArrayList<CallsLogsBean> callslogs = new ArrayList<CallsLogsBean>();
+		Cursor cursor = context.getContentResolver().query(
+				Calls.CONTENT_URI,
+				new String[] { Calls.CACHED_NAME, Calls.DURATION, Calls.TYPE,
+						Calls.DATE, Calls.NUMBER }, "number=?",
+				new String[] { phoneNum }, Calls.DEFAULT_SORT_ORDER);
+		boolean hasRecord = cursor.moveToFirst();
+		String strPhone = "";
+		String date;
+
+		while (hasRecord) {
+			CallsLogsBean callsLogsBean = new CallsLogsBean();
+			// 姓名
+			String name = cursor.getString(0);
+			// 类型（拨出、接听）
+			int type = cursor.getInt(cursor.getColumnIndex(Calls.TYPE));
+			// 拨打持续时间
+			long duration = cursor.getLong(cursor
+					.getColumnIndex(Calls.DURATION));
+			// 拨号手机号
+			strPhone = cursor.getString(cursor.getColumnIndex(Calls.NUMBER));
+
+			SimpleDateFormat formatter = new SimpleDateFormat(
+					"yyyy-MM-dd HH:mm:ss");// 得到当前的时间
+			Date d = new Date(Long.parseLong(cursor.getString(cursor
+					.getColumnIndex(Calls.DATE))));
+
+			// 拨打日期
+			date = formatter.format(d);
+
+			callsLogsBean.setDate(date);
+			callsLogsBean.setDuration(duration);
+			callsLogsBean.setPhoneNum(strPhone);
+			callsLogsBean.setType(type);
+			if (name != null) {
+				callsLogsBean.setName(name);
+			}
+			callslogs.add(callsLogsBean);
+			hasRecord = cursor.moveToNext();
+			// String queryAddress = queryAddress(strPhone);
+			// Log.v("simon", queryAddress);
+
+		}
+
+		return callslogs;
+	}
+
+	/**
+	 * 
+	 * @param context
+	 * @return 获取最新的通话记录
+	 */
+	public static CallsLogsBean getLastCallsLogs(Context context) {
+
+		// String result = null;
+		CallsLogsBean callsLogsBean = new CallsLogsBean();
+		Cursor cursor = context.getContentResolver().query(
+				Calls.CONTENT_URI,
+				new String[] { Calls.CACHED_NAME, Calls.DURATION, Calls.TYPE,
+						Calls.DATE, Calls.NUMBER }, null, null,
+				"date desc limit 1");
+		boolean hasRecord = cursor.moveToFirst();
+		String strPhone = "";
+		String date;
+
+		while (hasRecord) {
+
+			// 姓名
+			String name = cursor.getString(0);
+			// 类型（拨出、接听）
+			int type = cursor.getInt(cursor.getColumnIndex(Calls.TYPE));
+			// 拨打持续时间
+			long duration = cursor.getLong(cursor
+					.getColumnIndex(Calls.DURATION));
+			// 拨号手机号
+			strPhone = cursor.getString(cursor.getColumnIndex(Calls.NUMBER));
+
+			SimpleDateFormat formatter = new SimpleDateFormat(
+					"yyyy-MM-dd HH:mm:ss");// 得到当前的时间
+			Date d = new Date(Long.parseLong(cursor.getString(cursor
+					.getColumnIndex(Calls.DATE))));
+			String str = formatter.format(d);
+			try {
+				if (JudgeDataUtil.IsToday(str)) {
+					formatter = new SimpleDateFormat("HH:mm");
+				} else {
+					if (JudgeDataUtil.IsYesterday(str)) {
+						formatter = new SimpleDateFormat("昨天 HH:mm");
+					} else {
+						formatter = new SimpleDateFormat("MM月dd日 HH:mm");
+					}
+
+				}
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			// 去掉所有空格
+			strPhone = strPhone.replaceAll(" ", "");
+			// 得到归属地
+			 String address = NumberAddressDBUtils.getAddress(strPhone);
+			 callsLogsBean.setLocation(address);
+			// 拨打日期
+			date = formatter.format(d);
+
+			callsLogsBean.setDate(date);
+			callsLogsBean.setDuration(duration);
+
+			callsLogsBean.setPhoneNum(strPhone);
+			callsLogsBean.setType(type);
+			if (name != null) {
+				callsLogsBean.setName(name);
+			}
+			hasRecord = cursor.moveToNext();
+			// String queryAddress = queryAddress(strPhone);
+			// Log.v("simon", queryAddress);
+
+		}
+
+		return callsLogsBean;
+	}
+
+	/**
+	 * 
+	 * @param context
+	 * @return 获取全部通话记录
+	 */
+	public static ArrayList<CallsLogsBean> getCallsLogs(Context context) {
+
+		// String result = null;
+		ArrayList<CallsLogsBean> callslogs = new ArrayList<CallsLogsBean>();
+		Cursor cursor = context.getContentResolver().query(
+				Calls.CONTENT_URI,
+				new String[] { Calls.CACHED_NAME, Calls.DURATION, Calls.TYPE,
+						Calls.DATE, Calls.NUMBER }, null, null,
+				Calls.DEFAULT_SORT_ORDER+" limit 0 ,20");
+		boolean hasRecord = cursor.moveToFirst();
+		String strPhone = "";
+		String date;
+
+		while (hasRecord) {
+			CallsLogsBean callsLogsBean = new CallsLogsBean();
+			// 姓名
+			String name = cursor.getString(0);
+			// 类型（拨出、接听）
+			int type = cursor.getInt(cursor.getColumnIndex(Calls.TYPE));
+			// 拨打持续时间
+			long duration = cursor.getLong(cursor
+					.getColumnIndex(Calls.DURATION));
+			// 拨号手机号
+			strPhone = cursor.getString(cursor.getColumnIndex(Calls.NUMBER));
+
+			SimpleDateFormat formatter = new SimpleDateFormat(
+					"yyyy-MM-dd HH:mm:ss");// 得到当前的时间
+			Date d = new Date(Long.parseLong(cursor.getString(cursor
+					.getColumnIndex(Calls.DATE))));
+			String str = formatter.format(d);
+			try {
+				if (JudgeDataUtil.IsToday(str)) {
+					formatter = new SimpleDateFormat("HH:mm");
+				} else {
+					if (JudgeDataUtil.IsYesterday(str)) {
+						formatter = new SimpleDateFormat("昨天 HH:mm");
+					} else {
+						formatter = new SimpleDateFormat("MM月dd日 HH:mm");
+					}
+
+				}
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			// 去掉所有空格
+			strPhone = strPhone.replaceAll(" ", "");
+			// 得到归属地
+			String address = NumberAddressDBUtils.getAddress(strPhone);
+			callsLogsBean.setLocation(address);
+			// 拨打日期
+			date = formatter.format(d);
+
+			callsLogsBean.setDate(date);
+			callsLogsBean.setDuration(duration);
+
+			callsLogsBean.setPhoneNum(strPhone);
+			callsLogsBean.setType(type);
+			if (name != null) {
+				callsLogsBean.setName(name);
+			}
+			callslogs.add(callsLogsBean);
+			hasRecord = cursor.moveToNext();
+			// String queryAddress = queryAddress(strPhone);
+			// Log.v("simon", queryAddress);
+
+		}
+
+		return callslogs;
+	}
+
+	/**
+	 * 插入一条通话记录
+	 * 
+	 * @param number
+	 *            通话号码
+	 * @param duration
+	 *            通话时长（响铃时长）以秒为单位 1分30秒则输入90
+	 * @param type
+	 *            通话类型 1呼入 2呼出 3未接
+	 * @param isNew
+	 *            是否已查看 0已看1未看
+	 */
+	public static void insertCallLog(Context c, String number, String type,
+			String isNew) {
+		// 在通讯录查询是否存在该联系人，若存在则把名字信息也插入到通话记录中
+		String name = "";
+		String[] cols = { ContactsContract.PhoneLookup.DISPLAY_NAME };
+		// 设置查询条件
+		String selection = ContactsContract.CommonDataKinds.Phone.NUMBER + "='"
+				+ number + "'";
+		Cursor cursor = c.getContentResolver().query(
+				ContactsContract.CommonDataKinds.Phone.CONTENT_URI, cols,
+				selection, null, null);
+		int nameFieldColumnIndex = cursor
+				.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME);
+		if (cursor.getCount() > 0) {
+			cursor.moveToFirst();
+			name = cursor.getString(nameFieldColumnIndex);
+		}
+		cursor.close();
+
+		ContentValues values = new ContentValues();
+		if (name.equals("")) {
+			name = number;
+		}
+		values.put(CallLog.Calls.CACHED_NAME, name);
+		values.put(CallLog.Calls.NUMBER, number);
+		values.put(CallLog.Calls.DATE, System.currentTimeMillis());
+		// values.put(CallLog.Calls.DURATION, duration);
+		values.put(CallLog.Calls.TYPE, type);
+		values.put(CallLog.Calls.NEW, isNew);
+
+		c.getContentResolver().insert(CallLog.Calls.CONTENT_URI, values);
+	}
+
+	/**
+	 * 删除一条通话记录
+	 * 
+	 * @param number
+	 *            通话号码
+	 * 
+	 */
+
+	public static void delectCallLog(Context c, String number) {
+
+		c.getContentResolver().delete(CallLog.Calls.CONTENT_URI,
+				CallLog.Calls.NUMBER + "=?", new String[] { number });
+	}
+
+	private static final String path = "/data/data/com.qingguow.mobilesafe/files/address.db";
+
+	/**
+	 * 查询号码归属地
+	 * 
+	 * @param phone
+	 * @return
+	 */
+	public static String queryAddress(String phone) {
+		SQLiteDatabase db = SQLiteDatabase.openDatabase(path, null,
+				SQLiteDatabase.OPEN_READONLY);
+		Cursor cursor = db
+				.rawQuery(
+						"select location from data2 where id=(select outkey from data1 where id=?)",
+						new String[] { phone.substring(0, 7) });
+		while (cursor.moveToNext()) {
+			String address = cursor.getString(0);
+			return address;
+		}
+		cursor.close();
+		return "";
+	}
+
+	// 根据联系人电话号码查询名字
+	public static String queryNameFromContactsByNumber(Context context,
+			String number) {
+		String name = null;
+		if (context != null && number != null && !"".equals(number.trim())) {
+			Uri uri = Uri.withAppendedPath(
+					ContactsContract.CommonDataKinds.Phone.CONTENT_FILTER_URI,
+					number);
+			Cursor nameCursor = context.getContentResolver().query(uri,
+					new String[] { "display_name" }, null, null, null);
+			if (nameCursor != null) {
+				if (nameCursor.getCount() > 0) {
+					nameCursor.moveToFirst();
+					name = nameCursor.getString(0);
+				}
+			}
+		}
+		return name;
+	}
+}
